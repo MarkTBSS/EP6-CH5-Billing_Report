@@ -31,23 +31,23 @@ func playType(play _Play) string {
 }
 
 func amountFor(performance Performance, play _Play) float64 {
-	thisAmount := 0.0
+	result := 0.0
 	switch playType(play) {
 	case "tragedy":
-		thisAmount = 40000
+		result = 40000
 		if performance.Audience > 30 {
-			thisAmount += 1000 * (float64(performance.Audience - 30))
+			result += 1000 * (float64(performance.Audience - 30))
 		}
 	case "comedy":
-		thisAmount = 30000
+		result = 30000
 		if performance.Audience > 20 {
-			thisAmount += 10000 + 500*(float64(performance.Audience-20))
+			result += 10000 + 500*(float64(performance.Audience-20))
 		}
-		thisAmount += 300 * float64(performance.Audience)
+		result += 300 * float64(performance.Audience)
 	default:
 		panic(fmt.Sprintf("unknow type: %s", play.Type))
 	}
-	return thisAmount
+	return result
 }
 
 func statement(invoice Invoice, plays Play) string {
