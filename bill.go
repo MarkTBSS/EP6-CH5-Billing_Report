@@ -22,40 +22,51 @@ type Invoice struct {
 	Performances []Performance `json:"performances"`
 }
 
+func playName(play _Play) string {
+	return play.Name
+}
+
+func playType(play _Play) string {
+	return play.Type
+}
+
+func amountFor(performance Performance, play _Play) float64 {
+	thisAmount := 0.0
+	switch playType(play) {
+	case "tragedy":
+		thisAmount = 40000
+		if performance.Audience > 30 {
+			thisAmount += 1000 * (float64(performance.Audience - 30))
+		}
+	case "comedy":
+		thisAmount = 30000
+		if performance.Audience > 20 {
+			thisAmount += 10000 + 500*(float64(performance.Audience-20))
+		}
+		thisAmount += 300 * float64(performance.Audience)
+	default:
+		panic(fmt.Sprintf("unknow type: %s", play.Type))
+	}
+	return thisAmount
+}
+
 func statement(invoice Invoice, plays Play) string {
 	totalAmount := 0.0
 	volumeCredits := 0.0
 	result := fmt.Sprintf("Statement for %s\n", invoice.Customer)
 
-	for _, perf := range invoice.Performances {
-		play := plays[perf.PlayID]
-		thisAmount := 0.0
-
-		switch play.Type {
-		case "tragedy":
-			thisAmount = 40000
-			if perf.Audience > 30 {
-				thisAmount += 1000 * (float64(perf.Audience - 30))
-			}
-		case "comedy":
-			thisAmount = 30000
-			if perf.Audience > 20 {
-				thisAmount += 10000 + 500*(float64(perf.Audience-20))
-			}
-			thisAmount += 300 * float64(perf.Audience)
-		default:
-			panic(fmt.Sprintf("unknow type: %s", play.Type))
-		}
-
+	for _, performance := range invoice.Performances {
+		play := plays[performance.PlayID]
+		thisAmount := amountFor(performance, play)
 		// add volume credits
-		volumeCredits += math.Max(float64(perf.Audience-30), 0)
+		volumeCredits += math.Max(float64(performance.Audience-30), 0)
 		// add extra credit for every ten comedy attendees
-		if "comedy" == play.Type {
-			volumeCredits += math.Floor(float64(perf.Audience / 5))
+		if "comedy" == playType(play) {
+			volumeCredits += math.Floor(float64(performance.Audience / 5))
 		}
 
 		// print line for this order
-		result += fmt.Sprintf("  %s: $%.2f (%d seats)\n", play.Name, thisAmount/100, perf.Audience)
+		result += fmt.Sprintf("  %s: $%.2f (%d seats)\n", playName(play), thisAmount/100, performance.Audience)
 		totalAmount += thisAmount
 	}
 	result += fmt.Sprintf("Amount owed is $%.2f\n", totalAmount/100)
