@@ -5,9 +5,9 @@ import (
 	"math"
 )
 
-type Play map[string]_Play
+type Plays map[string]Play
 
-type _Play struct {
+type Play struct {
 	Name string
 	Type string
 }
@@ -22,15 +22,15 @@ type Invoice struct {
 	Performances []Performance `json:"performances"`
 }
 
-func playName(play _Play) string {
+func playName(play Play) string {
 	return play.Name
 }
 
-func playType(play _Play) string {
+func playType(play Play) string {
 	return play.Type
 }
 
-func amountFor(performance Performance, play _Play) float64 {
+func amountFor(performance Performance, play Play) float64 {
 	result := 0.0
 	switch playType(play) {
 	case "tragedy":
@@ -50,7 +50,7 @@ func amountFor(performance Performance, play _Play) float64 {
 	return result
 }
 
-func statement(invoice Invoice, plays Play) string {
+func statement(invoice Invoice, plays Plays) string {
 	totalAmount := 0.0
 	volumeCredits := 0.0
 	result := fmt.Sprintf("Statement for %s\n", invoice.Customer)
@@ -82,7 +82,7 @@ func main() {
 			{PlayID: "as-like", Audience: 35},
 			{PlayID: "othello", Audience: 40},
 		}}
-	plays := map[string]_Play{
+	plays := map[string]Play{
 		"hamlet":  {Name: "Hamlet", Type: "tragedy"},
 		"as-like": {Name: "As You Like It", Type: "comedy"},
 		"othello": {Name: "Othello", Type: "tragedy"},
