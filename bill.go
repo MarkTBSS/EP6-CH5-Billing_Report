@@ -55,39 +55,44 @@ func amountFor(performance Performance, play Play) float64 {
 }
 
 func volumeCreditsFor(plays Plays, performance Performance) float64 {
-	volumeCredits := 0.0
-	volumeCredits += math.Max(float64(performance.Audience-30), 0)
+	result := 0.0
+	result += math.Max(float64(performance.Audience-30), 0)
 	// add extra credit for every ten comedy attendees
 	if "comedy" == playType(playFor(plays, performance)) {
-		volumeCredits += math.Floor(float64(performance.Audience / 5))
+		result += math.Floor(float64(performance.Audience / 5))
 	}
-	return volumeCredits
+	return result
 }
 
 func totalAmountFor(invoice Invoice, plays Plays) float64 {
 	result := 0.0
 	for _, performance := range invoice.Performances {
-		result += amountFor(performance, playFor(plays, performance))
+		play := playFor(plays, performance)
+		result += amountFor(performance, play)
 	}
 	return result
 }
 
-func totalVolumeCreditsFor(invoice Invoice, plays Plays) float64 {
+func totalVolumeCreditsFor(performances []Performance, plays Plays) float64 {
 	result := 0.0
-	for _, performance := range invoice.Performances {
+	for _, performance := range performances {
 		result += volumeCreditsFor(plays, performance)
 	}
 	return result
 }
 
-func statement(invoice Invoice, plays Plays) string {
+func renderPlainText(invoice Invoice, plays Plays) string {
 	result := fmt.Sprintf("Statement for %s\n", invoice.Customer)
 	for _, performance := range invoice.Performances {
 		result += fmt.Sprintf("  %s: $%.2f (%d seats)\n", playName(playFor(plays, performance)), amountFor(performance, playFor(plays, performance))/100, performance.Audience)
 	}
 	result += fmt.Sprintf("Amount owed is $%.2f\n", totalAmountFor(invoice, plays)/100)
-	result += fmt.Sprintf("you earned %.0f credits\n", totalVolumeCreditsFor(invoice, plays))
+	result += fmt.Sprintf("you earned %.0f credits\n", totalVolumeCreditsFor(invoice.Performances, plays))
 	return result
+}
+
+func statement(invoice Invoice, plays Plays) string {
+	return renderPlainText(invoice, plays)
 }
 
 func main() {
