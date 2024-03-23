@@ -22,6 +22,20 @@ type Invoice struct {
 	Performances []Performance `json:"performances"`
 }
 
+type Bill struct {
+	Customer           string
+	Rates              []Rate
+	TotalAmount        float64
+	TotalVolumeCredits float64
+}
+
+type Rate struct {
+	Play          Play
+	Amount        float64
+	VolumnCredits float64
+	Audience      int
+}
+
 func playName(play Play) string {
 	return play.Name
 }
@@ -81,27 +95,8 @@ func totalVolumeCreditsFor(performances []Performance, plays Plays) float64 {
 	return result
 }
 
-type Bill struct {
-	Customer           string
-	TotalAmount        float64
-	TotalVolumeCredits float64
-}
-
-type Rate struct {
-	Play          Play
-	Amount        float64
-	VolumnCredits float64
-	Audience      int
-}
-
-func renderPlainText(invoice Invoice, plays Plays) string {
-	bill := Bill{
-		Customer:           invoice.Customer,
-		TotalAmount:        totalAmountFor(invoice, plays),
-		TotalVolumeCredits: totalVolumeCreditsFor(invoice.Performances, plays),
-	}
+func statement(invoice Invoice, plays Plays) string {
 	rates := []Rate{}
-
 	for _, performance := range invoice.Performances {
 		rate := Rate{
 			Play:          playFor(plays, performance),
@@ -110,19 +105,24 @@ func renderPlainText(invoice Invoice, plays Plays) string {
 			Audience:      performance.Audience,
 		}
 		rates = append(rates, rate)
-
 	}
+	bill := Bill{
+		Customer:           invoice.Customer,
+		Rates:              rates,
+		TotalAmount:        totalAmountFor(invoice, plays),
+		TotalVolumeCredits: totalVolumeCreditsFor(invoice.Performances, plays),
+	}
+	return renderPlainText(invoice, plays, bill)
+}
+
+func renderPlainText(invoice Invoice, plays Plays, bill Bill) string {
 	result := fmt.Sprintf("Statement for %s\n", bill.Customer)
-	for _, rate := range rates {
+	for _, rate := range bill.Rates {
 		result += fmt.Sprintf("  %s: $%.2f (%d seats)\n", rate.Play.Name, rate.Amount/100, rate.Audience)
 	}
 	result += fmt.Sprintf("Amount owed is $%.2f\n", bill.TotalAmount/100)
 	result += fmt.Sprintf("you earned %.0f credits\n", bill.TotalVolumeCredits)
 	return result
-}
-
-func statement(invoice Invoice, plays Plays) string {
-	return renderPlainText(invoice, plays)
 }
 
 func main() {
